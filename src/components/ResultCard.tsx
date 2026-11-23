@@ -1,140 +1,100 @@
-import React from "react";
-import {
-  CheckCircle,
-  AlertTriangle,
-  Volume2,
-  Shield,
-  XCircle,
-} from "lucide-react";
-import type { HybridResult } from "../lib/hybridAI";
-import { InferenceBadge } from "./InferenceBadge";
-import { speak } from "../lib/voice";
+import type { HybridResult } from '../lib/hybridAI'
+import { speak } from '../lib/voice'
+import { AlertIcon, CheckIcon, VolumeIcon, DeviceIcon, CloudIcon } from './Icons'
 
 interface ResultCardProps {
-  result: HybridResult;
+  result: HybridResult
 }
 
-export const ResultCard: React.FC<ResultCardProps> = ({ result }) => {
-  const isFraud = result.fraudFlag;
-  const isApproved = result.status === "APPROVED";
+export function ResultCard({ result }: ResultCardProps) {
+  const isFraud = result.fraudFlag
+  const isApproved = result.status === 'APPROVED'
 
-  const speakResult = () => {
-    const msg = isFraud
-      ? `Warning! Fraud detected. ${result.result}`
-      : `${result.status || "Analysis complete"}. ${result.amount ? `Amount: ${result.amount}.` : ""} ${result.sender ? `From: ${result.sender}.` : ""} ${result.result}`;
-    speak(msg);
-  };
+  const handleSpeak = () => {
+    const text = isFraud
+      ? `Warning. Potential fraud detected. ${result.result}`
+      : `Verified. ${result.result}`
+    speak(text)
+  }
 
   return (
-    <div
-      className={`rounded-2xl border p-6 space-y-4 transition-all ${
-        isFraud
-          ? "border-rose-500/40 bg-rose-500/5"
-          : isApproved
-          ? "border-emerald-500/40 bg-emerald-500/5"
-          : "border-slate-700 bg-slate-900/60"
-      }`}
-    >
-      {/* Status Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-3">
+    <div className="border border-zinc-800 bg-zinc-900/60 rounded-xl p-5 space-y-4">
+      {/* Status Bar */}
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-2.5">
           {isFraud ? (
-            <XCircle className="h-7 w-7 text-rose-400 shrink-0" />
-          ) : isApproved ? (
-            <CheckCircle className="h-7 w-7 text-emerald-400 shrink-0" />
+            <div className="w-8 h-8 rounded-lg bg-red-500/10 text-red-400 flex items-center justify-center shrink-0">
+              <AlertIcon className="w-4 h-4" />
+            </div>
           ) : (
-            <Shield className="h-7 w-7 text-sky-400 shrink-0" />
+            <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center shrink-0">
+              <CheckIcon className="w-4 h-4" />
+            </div>
           )}
           <div>
-            <p
-              className={`text-lg font-extrabold ${
-                isFraud
-                  ? "text-rose-400"
-                  : isApproved
-                  ? "text-emerald-400"
-                  : "text-sky-400"
-              }`}
-            >
-              {isFraud
-                ? "⚠ Fraud Risk Detected"
-                : result.status === "APPROVED"
-                ? "✓ Transaction Verified"
-                : result.status === "DECLINED"
-                ? "✗ Transaction Declined"
-                : "Analysis Complete"}
-            </p>
-            <p className="text-xs text-slate-400">
-              Confidence:{" "}
-              <span
-                className={`font-bold ${
-                  result.confidence === "high"
-                    ? "text-emerald-400"
-                    : result.confidence === "medium"
-                    ? "text-amber-400"
-                    : "text-rose-400"
-                }`}
-              >
-                {result.confidence?.toUpperCase()}
-              </span>
-            </p>
+            <div className="text-sm font-medium text-zinc-100">
+              {isFraud ? 'High risk detected' : isApproved ? 'Transaction verified' : 'Audit complete'}
+            </div>
+            <div className="text-xs text-zinc-400">
+              {isFraud 
+                ? 'Details deviate from standard banking formats' 
+                : 'Structure and references match known patterns'}
+            </div>
           </div>
         </div>
 
-        {/* Speak Button */}
         <button
-          onClick={speakResult}
-          aria-label="Read result aloud"
-          className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sm font-semibold text-slate-200 transition-colors"
+          onClick={handleSpeak}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-700 bg-zinc-800 hover:bg-zinc-750 text-xs text-zinc-300 font-medium cursor-pointer"
+          title="Read audit aloud"
         >
-          <Volume2 className="h-4 w-4 text-indigo-400" />
-          Read Aloud
+          <VolumeIcon className="w-3.5 h-3.5 text-zinc-400" />
+          <span>Read aloud</span>
         </button>
       </div>
 
-      {/* Key Fields */}
+      {/* Structured Ledger (If amount/sender exists) */}
       {(result.amount || result.sender) && (
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 gap-3 py-2 border-y border-zinc-800/80 text-xs">
           {result.amount && (
-            <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/40">
-              <p className="text-[10px] text-slate-400 uppercase font-semibold">
-                Amount
-              </p>
-              <p className="text-xl font-black text-white mt-0.5">
-                {result.amount}
-              </p>
+            <div>
+              <div className="text-zinc-500 text-[11px]">Parsed amount</div>
+              <div className="font-mono text-sm text-zinc-200 font-medium mt-0.5">{result.amount}</div>
             </div>
           )}
           {result.sender && (
-            <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/40">
-              <p className="text-[10px] text-slate-400 uppercase font-semibold">
-                Sender / Bank
-              </p>
-              <p className="text-sm font-bold text-slate-200 mt-0.5">
-                {result.sender}
-              </p>
+            <div>
+              <div className="text-zinc-500 text-[11px]">Merchant / Sender</div>
+              <div className="font-medium text-zinc-200 mt-0.5">{result.sender}</div>
             </div>
           )}
         </div>
       )}
 
-      {/* Summary */}
-      <div className="p-4 rounded-xl bg-slate-800/40 border border-slate-700/30">
-        <p className="text-sm text-slate-200 leading-relaxed">{result.result}</p>
+      {/* Analysis Finding */}
+      <div className="text-xs text-zinc-300 leading-relaxed font-normal">
+        {result.result}
       </div>
 
-      {/* Fraud Warning */}
-      {isFraud && (
-        <div className="flex items-start gap-3 p-3 rounded-xl bg-rose-500/10 border border-rose-500/30">
-          <AlertTriangle className="h-5 w-5 text-rose-400 shrink-0 mt-0.5" />
-          <p className="text-xs text-rose-300 leading-relaxed font-medium">
-            Do NOT confirm this transaction or enter your PIN until you have
-            independently verified this alert by calling your bank directly.
-          </p>
+      {/* Model Footnote */}
+      <div className="flex items-center justify-between text-[11px] text-zinc-500 pt-1">
+        <div className="flex items-center gap-1.5">
+          {result.mode === 'on-device' ? (
+            <>
+              <DeviceIcon className="w-3.5 h-3.5 text-zinc-400" />
+              <span>Processed locally (Gemini Nano)</span>
+            </>
+          ) : (
+            <>
+              <CloudIcon className="w-3.5 h-3.5 text-zinc-400" />
+              <span>Processed via Cloud Fallback (Gemini Flash)</span>
+            </>
+          )}
         </div>
-      )}
-
-      {/* Inference Badge */}
-      <InferenceBadge mode={result.mode} latencyMs={result.latencyMs} />
+        {result.latencyMs > 0 && (
+          <span className="font-mono">{result.latencyMs}ms</span>
+        )}
+      </div>
     </div>
-  );
-};
+  )
+}
